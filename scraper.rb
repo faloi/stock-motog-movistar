@@ -3,16 +3,48 @@
 
 require 'scraperwiki'
 require 'mechanize'
+require 'gmail'
 
-agent = Mechanize.new
+class MovistarWebScraper
+  def initialize
+    @agent = Mechanize.new
+  end
 
-# Read in a page
-page = agent.get('http://www.tiendamovistar.com.ar/product/MOTO-G-4G-LTE,3195,245.aspx')
+  def check_stock
+    page = agent.get('http://www.tiendamovistar.com.ar/product/MOTO-G-4G-LTE,3195,245.aspx')
+    buy_button = page.at('input[name="ctl00$MainContent$ProductInfo1$ctl02$btnBuyPlan"]')
 
-# Find somehing on the page using css selectors
-buy_button = page.at('input[name="ctl00$MainContent$ProductInfo1$ctl02$btnBuyPlan"]')
+    {timestamp: DateTime.now, has_stock: buy_button['disabled'] != 'disabled'}
+  end
+end
 
-has_stock = buy_button['disabled'] != 'disabled'
+class MorphNotifier
+  def notify(result)
+    ScraperWiki.save_sqlite(['timestamp'], result)
+  end
+end
 
-# Write out to the sqlite database using scraperwiki library
-ScraperWiki.save_sqlite(['timestamp'], { 'timestamp' => DateTime.now, 'has_stock' => has_stock.to_s })
+class GmailNotifier
+  def notify(result)
+    Gmail.new(username, password) do |gmail|
+      send_mail gmail, result
+    end
+  end
+
+  def send_mail(gmail, result)
+    gmail.deliver do
+      to "email@example.com"
+      subject "Having fun in Puerto Rico!"
+      text_part do
+        body "Text of plaintext message."
+      end
+    end
+  end
+end
+
+result = MovistarWebScraper.new.check_stock
+config = {from: ENV['MORPH_MAIL_FROM'], to: ENV['MORPH_MAIL_TO'], password: ENV['MORPH_PASSWORD']}
+
+[MorphNotifier.new, GmailNotifier.new config].do |notifier|
+  notifier.notify result
+end
