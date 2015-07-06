@@ -1,6 +1,3 @@
-# This is a template for a Ruby scraper on morph.io (https://morph.io)
-# including some code snippets below that you should find helpful
-
 require 'scraperwiki'
 require 'mechanize'
 require 'gmail'
@@ -35,7 +32,7 @@ class GmailNotifier
   end
 
   def notify(result)
-    Gmail.new(@config.from, @config.password) do |gmail|
+    Gmail.connect(@config.from, @config.password) do |gmail|
       send_mail gmail, result
     end
   end
