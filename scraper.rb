@@ -47,7 +47,7 @@ class GmailNotifier
      :from_email => @config.from
     }
 
-    sending = m.messages.send message
+    sending = mandrill.messages.send message
 
     puts sending
   end
