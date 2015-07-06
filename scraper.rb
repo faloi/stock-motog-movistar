@@ -1,7 +1,7 @@
 require 'scraperwiki'
 require 'mechanize'
-require 'pony'
 require 'ostruct'
+require 'mandrill'
 
 class MovistarWebScraper
   def initialize
@@ -36,20 +36,20 @@ class GmailNotifier
   end
 
   def send_mail(subject)
-    Pony.mail({
-      :to => @config.to,
-      :subject => subject,
-      :via => :smtp,
-      :via_options => {
-        :address              => 'smtp.gmail.com',
-        :port                 => '587',
-        :enable_starttls_auto => true,
-        :user_name            => @config.from,
-        :password             => @config.password,
-        :authentication       => :plain, # :plain, :login, :cram_md5, no auth by default
-        :domain               => "localhost.localdomain" # the HELO domain provided by the client to the server
-      }
-    })
+    mandrill = Mandrill::API.new @config.mandrill_api_key
+
+    message = {
+     :subject => subject,
+     :from_name => "Movistar Stock Check",
+     :to => [
+       {:email => @config.to}
+     ],
+     :from_email => @config.from
+    }
+
+    sending = m.messages.send message
+
+    puts sending
   end
 
   def to_subject(result)
@@ -58,7 +58,7 @@ class GmailNotifier
 end
 
 result = MovistarWebScraper.new.check_stock
-config = OpenStruct.new :from => ENV['MORPH_MAIL_FROM'], :to => ENV['MORPH_MAIL_TO'], :password => ENV['MORPH_PASSWORD']
+config = OpenStruct.new :from => ENV['MORPH_MAIL_FROM'], :to => ENV['MORPH_MAIL_TO', :mandrill_api_key => ENV['MORPH_MANDRILL_API_KEY']
 
 [MorphNotifier.new, GmailNotifier.new(config)].each do |notifier|
   notifier.notify result
