@@ -32,7 +32,7 @@ class GmailNotifier
   end
 
   def notify(result)
-    Gmail.connect(@config.from, @config.password) do |gmail|
+    Gmail.connect!(@config.from, @config.password) do |gmail|
       send_mail gmail, result
     end
   end
