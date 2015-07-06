@@ -4,13 +4,15 @@ require 'ostruct'
 require 'mandrill'
 
 class MovistarWebScraper
+  URL = 'http://www.tiendamovistar.com.ar/product/MOTO-G-4G-LTE,3195,245.aspx'
+
   def initialize
     @agent = Mechanize.new
   end
 
   def check_stock
-    page = @agent.get('http://www.tiendamovistar.com.ar/product/MOTO-G-4G-LTE,3195,245.aspx')
-    buy_button = page.at('input[name="ctl00$MainContent$ProductInfo1$ctl02$btnBuyPlan"]')
+    page = @agent.get URL
+    buy_button = page.at 'input[name="ctl00$MainContent$ProductInfo1$ctl02$btnBuyPlan"]'
 
     OpenStruct.new :timestamp => DateTime.now, :has_stock => buy_button['disabled'] != 'disabled'
   end
@@ -32,10 +34,10 @@ class GmailNotifier
   end
 
   def notify(result)
-    send_mail (to_subject result)
+    send_mail (to_subject result), (to_body result)
   end
 
-  def send_mail(subject)
+  def send_mail(subject, body)
     mandrill = Mandrill::API.new @config.mandrill_api_key
 
     message = {
@@ -53,7 +55,11 @@ class GmailNotifier
   end
 
   def to_subject(result)
-    "Stock al #{result.timestamp}: #{result.has_stock ? 'DISPONIBLE!! :D' : 'naranja :('}"
+    "#{result.has_stock ? '¡Ya hay stock de Moto G! :D' : 'Todavia no hay stock de Moto G'} (#{result.timestamp.strftime '%c'})"
+  end
+
+  def to_body(result)
+    "Compralo en #{MovistarWebScraper::URL}" if result.has_stock
   end
 end
 
