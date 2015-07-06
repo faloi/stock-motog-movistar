@@ -1,6 +1,6 @@
 require 'scraperwiki'
 require 'mechanize'
-require 'gmail'
+require 'Pony'
 require 'ostruct'
 
 class MovistarWebScraper
@@ -32,16 +32,24 @@ class GmailNotifier
   end
 
   def notify(result)
-    Gmail.connect!(@config.from, @config.password) do |gmail|
-      send_mail gmail, result
-    end
+    send_mail (to_subject result)
   end
 
-  def send_mail(gmail, result)
-    gmail.deliver do
-      to @config.to
-      subject (to_subject result)
-    end
+  def send_mail(subject)
+    Pony.mail({
+      :to => @config.to,
+      :subject => subject,
+      :via => :smtp,
+      :via_options => {
+        :address              => 'smtp.gmail.com',
+        :port                 => '587',
+        :enable_starttls_auto => true,
+        :user_name            => @config.from,
+        :password             => @config.password,
+        :authentication       => :plain, # :plain, :login, :cram_md5, no auth by default
+        :domain               => "localhost.localdomain" # the HELO domain provided by the client to the server
+      }
+    })
   end
 
   def to_subject
