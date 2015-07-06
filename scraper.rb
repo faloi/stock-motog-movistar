@@ -58,7 +58,7 @@ class GmailNotifier
 end
 
 result = MovistarWebScraper.new.check_stock
-config = OpenStruct.new :from => ENV['MORPH_MAIL_FROM'], :to => ENV['MORPH_MAIL_TO', :mandrill_api_key => ENV['MORPH_MANDRILL_API_KEY']
+config = OpenStruct.new :from => ENV['MORPH_MAIL_FROM'], :to => ENV['MORPH_MAIL_TO'], :mandrill_api_key => ENV['MORPH_MANDRILL_API_KEY']
 
 [MorphNotifier.new, GmailNotifier.new(config)].each do |notifier|
   notifier.notify result
