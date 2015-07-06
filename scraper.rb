@@ -1,6 +1,6 @@
 require 'scraperwiki'
 require 'mechanize'
-require 'Pony'
+require 'pony'
 require 'ostruct'
 
 class MovistarWebScraper
@@ -52,7 +52,7 @@ class GmailNotifier
     })
   end
 
-  def to_subject
+  def to_subject(result)
     "Stock al #{result.timestamp}: #{result.has_stock ? 'DISPONIBLE!! :D' : 'naranja :('}"
   end
 end
